@@ -149,7 +149,7 @@ def test_exit_handler(monkeypatch, mocker):
         lambda *a, **k: None,
     )
 
-    killed = mocker.patch("bytedance.c9m.common.launcher_base.kill_procs")
+    killed = mocker.patch("evakit.launcher_base.kill_procs")
 
     exit_handler(dummy_launcher, timeout=1, msg="cleanup")
 

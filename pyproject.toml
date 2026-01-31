@@ -1,7 +1,30 @@
+[build-system]
+requires = ["setuptools>=62.6"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "evakit"
+description = "A collection of utilities for the eva project."
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Gary Wei", email = "garywei944@gmail.com" }]
+readme = "README.md"
+classifiers = [
+  #    "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
 version = "0.1.0"
-requires-python = ">=3.14"
+dependencies = ["typed-argument-parser", "psutil"]
+
+[tool.setuptools]
+packages = ["evakit"]
 
 # ---------------- Black ----------------
 [tool.black]
@@ -20,8 +43,8 @@ ignore = []
 [tool.ruff.lint.isort]
 known-first-party = ["evakit"]
 
-[tool.ruff.lint.per-file-ignores]
-"evakit/__main__.py" = ["E402"]
+# [tool.ruff.lint.per-file-ignores]
+# "evakit/__main__.py" = ["E402"]
 
 # ---------------- mypy ----------------
 [tool.mypy]
