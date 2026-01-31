@@ -64,6 +64,7 @@ dependencies:
   - watchdog # filesystem event
   - sphinx # doc
   - pre-commit # for git hooks
+  - commitizen # for conventional commit messages
   - identify>=2.6.15
   - pytest
   - pytest-asyncio
