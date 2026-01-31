@@ -3,9 +3,10 @@ import logging
 import os
 from abc import ABC
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
-from typing import final, get_args, get_origin, override
+from typing import final, get_args, get_origin
 
 from tap import Tap
+from typing_extensions import override
 
 from evakit.python_tricks import freeze_dataclass
 from evakit.singleton import Singleton

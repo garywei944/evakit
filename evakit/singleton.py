@@ -20,6 +20,8 @@ Check out Google's 2008 Talk and Blog on "Global State and Singletons".
 - https://testing.googleblog.com/2008/08/root-cause-of-singletons.html
 """
 
+from __future__ import annotations
+
 import enum
 import functools
 import logging
@@ -36,8 +38,8 @@ __all__ = ["Singleton", "SingletonMeta", "reset_singleton"]
 
 logger = logging.getLogger(__name__)
 
-_CONSTRUCTING: ContextVar[tuple[type["Singleton"], ...]] = ContextVar("_CONSTRUCTING", default=())
-_EXEC_STACK: ContextVar[tuple[type["Singleton"], ...]] = ContextVar("_EXEC_STACK", default=())
+_CONSTRUCTING: ContextVar[tuple[type[Singleton], ...]] = ContextVar("_CONSTRUCTING", default=())
+_EXEC_STACK: ContextVar[tuple[type[Singleton], ...]] = ContextVar("_EXEC_STACK", default=())
 
 
 class SingletonFactoryState(enum.Enum):
@@ -128,7 +130,7 @@ class SingletonMeta(ABCMeta):
 
     def __call__(cls, *args, **kwargs):
         """Construct the singleton instance."""
-        _cls = cast(type["Singleton"], cls)
+        _cls = cast(type[Singleton], cls)
 
         constructing = _CONSTRUCTING.get()
         if _cls in constructing:
@@ -192,7 +194,7 @@ class SingletonMeta(ABCMeta):
                 # e.g. `A(dep=None); A.instance().dep = B.instance()`
                 # Do it recursively as DFS
                 stack = [instance]
-                visited: set[type["Singleton"]] = set([_cls])
+                visited: set[type[Singleton]] = set([_cls])
                 while stack:
                     curr = stack.pop()
                     for attr_name in curr.__dict__.values():
