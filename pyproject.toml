@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=62.6"]
+requires = ["setuptools>=64", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -26,8 +26,8 @@ dynamic = ["version"]
 [tool.setuptools]
 packages = ["evakit"]
 
-# [tool.setuptools.dynamic]
-# version = { attr = "evakit.__version__.__version__" }
+[tool.setuptools.dynamic]
+version = { attr = "evakit.__version__.__version__" }
 
 # ---------------- Black ----------------
 [tool.black]
