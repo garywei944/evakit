@@ -78,5 +78,5 @@ generated-members = ["sh"]
 name = "cz_conventional_commits"
 tag_format = "v$version"
 update_changelog_on_bump = false
-version = "0.2.2"
+version = "0.2.3"
 version_files = ["evakit/__version__.py"]
