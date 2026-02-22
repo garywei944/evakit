@@ -38,8 +38,21 @@ __all__ = ["Singleton", "SingletonMeta", "reset_singleton"]
 
 logger = logging.getLogger(__name__)
 
-_CONSTRUCTING: ContextVar[tuple[type[Singleton], ...]] = ContextVar("_CONSTRUCTING", default=())
-_EXEC_STACK: ContextVar[tuple[type[Singleton], ...]] = ContextVar("_EXEC_STACK", default=())
+
+def _env2bool(env_name: str) -> bool:
+    return os.getenv(env_name, "0") == "1"
+
+
+# Stop logging singleton related logs online.
+if "SINGLETON_DEBUG" in os.environ:
+    logger.setLevel(logging.DEBUG if _env2bool("SINGLETON_DEBUG") else logging.INFO)
+else:
+    logger.setLevel(logging.DEBUG if _env2bool("LOCAL_TEST") else logging.INFO)
+
+_CONSTRUCTING: ContextVar[tuple[type["Singleton"], ...]] = ContextVar("_CONSTRUCTING", default=())
+_EXEC_STACK: ContextVar[tuple[tuple[type["Singleton"], str], ...]] = ContextVar(
+    "_EXEC_STACK", default=()
+)
 
 
 class SingletonFactoryState(enum.Enum):
@@ -56,12 +69,13 @@ def _exec_stack_wrapper(func) -> Callable[[Any], Any]:
     def wrapper(self, *args, **kwargs):
         cls = type(self)
         stack = _EXEC_STACK.get()
-        token = _EXEC_STACK.set(stack + (cls,))
+        new_stack = stack + ((cls, func.__qualname__),)
+        token = _EXEC_STACK.set(new_stack)
         logger.debug(
             "Entering %s.%s, execution stack: %s",
-            cls.__name__,
+            _cls_repr(cls),
             func.__name__,
-            [e for e in stack + (cls,)],
+            [_f for _, _f in new_stack],
         )
         try:
             return func(self, *args, **kwargs)
@@ -97,7 +111,7 @@ def _get_meta_dict(
     module = sys.modules[cls.__module__]
     if not hasattr(module, "__singleton_meta_dict__"):
         if init:
-            setattr(module, "__singleton_meta_dict__", {})
+            setattr(module, "__singleton_meta_dict__", dict())
         else:
             raise RuntimeError(
                 f"SingletonMetadata dict not found under {module}. "
@@ -130,7 +144,7 @@ class SingletonMeta(ABCMeta):
 
     def __call__(cls, *args, **kwargs):
         """Construct the singleton instance."""
-        _cls = cast(type[Singleton], cls)
+        _cls = cast(type["Singleton"], cls)
 
         constructing = _CONSTRUCTING.get()
         if _cls in constructing:
@@ -177,7 +191,7 @@ class SingletonMeta(ABCMeta):
                         # ! It's not safe to automatically clean up owned singletons here,
                         # ! because other threads may be using them.
                         logger.critical(
-                            "[Singleton] Critical: Singleton %s failed to initialize, "
+                            "Critical: Singleton %s failed to initialize, "
                             "but it owns other singletons: [%s]. "
                             "These singletons may be leaked and need manual cleanup.",
                             cls.__name__,
@@ -191,10 +205,11 @@ class SingletonMeta(ABCMeta):
                 # record the dependencies
                 # ! This doesn't work if the attribute is first set with None and then assigned
                 # ! later. Please avoid such patterns in singleton classes,
-                # e.g. `A(dep=None); A.instance().dep = B.instance()`
+                # e.g. `SomeSingleton(dep=None); SomeSingleton.instance().dep =
+                # OtherSingleton.instance()`
                 # Do it recursively as DFS
                 stack = [instance]
-                visited: set[type[Singleton]] = set([_cls])
+                visited: set[type["Singleton"]] = set([_cls])
                 while stack:
                     curr = stack.pop()
                     for attr_name in curr.__dict__.values():
@@ -217,12 +232,12 @@ class SingletonMeta(ABCMeta):
                                 visited.add(dep_cls)
                 if metadata.owns:
                     logger.debug(
-                        "[Singleton] %s owns: [%s]",
+                        "%s owns: [%s]",
                         cls.__name__,
                         ", ".join(s.__name__ for s in metadata.owns),
                     )
                 logger.debug(
-                    "[Singleton] %s depends on: [%s]",
+                    "%s depends on: [%s]",
                     cls.__name__,
                     ", ".join(s.__name__ for s in metadata.depends),
                 )
@@ -250,7 +265,7 @@ class SingletonMeta(ABCMeta):
 
 
 class Singleton(ABC, metaclass=SingletonMeta):
-    """Testable Thread-safe Singleton class
+    """Testable Thread-safe Singleton class.
 
     - Supports subclassing, @dataclass, and type hinting.
         - ***Note that since Singleton is thread-safe and supports subclassing, all sub-classes of \
@@ -290,8 +305,8 @@ class Singleton(ABC, metaclass=SingletonMeta):
     # ! Avoid doing this:
     SomeOtherSingleton(dep=None); SomeOtherSingleton.instance().dep = MySingleton.instance()
 
-    # Calling B.instance() within A's method is prohibited and raises
-    # DependencyInjectionViolationError.
+    # Calling B.instance() within A's method is prohibited and raises \
+        DependencyInjectionViolationError.
     # A reference of B must be passed to A during A's construction.
     class SomeBaseSingletonClass(Singleton):
         def do_something(self):
@@ -320,8 +335,8 @@ class Singleton(ABC, metaclass=SingletonMeta):
     - We agree that all locks are acquired from a top-down order and released reversely.
         - e.g. in class A, lock are acquire la1 -> la2
         - class B inherits from class A, and locks are acquired lb2 -> lb1
-        - then in any method of class B, all locks must be acquired in the order \
-            la1 -> la2 -> lb2 -> lb1
+        - then in any method of class B, all locks must be acquired in the order la1 -> la2 -> lb2 \
+            -> lb1
     - All locks should be Reentrant Locks (RLocks), except for the root singleton class.
 
 
@@ -342,7 +357,7 @@ class Singleton(ABC, metaclass=SingletonMeta):
                 If None, wait indefinitely. Default is None.
         Raises:
             cf.TimeoutError: If the instance is not ready within the timeout.
-            DependencyInjectionViolationError: If called within the construction of another
+            DependencyInjectionViolationError: If called within the construction of another \
                 singleton.
             SelfRecursiveReferenceError: If called recursively within the same singleton class.
         Returns:
@@ -358,7 +373,7 @@ class Singleton(ABC, metaclass=SingletonMeta):
         metadata = _get_metadata(cls)
         if constructing:
             logger.error(
-                "[Singleton] Strict mode: Calling %s.instance() " "within %s is not allowed.",
+                "Calling %s.instance() within %s is not allowed.",
                 cls.__name__,
                 " -> ".join(base.__name__ + "()" for base in constructing),
             )
@@ -367,24 +382,49 @@ class Singleton(ABC, metaclass=SingletonMeta):
         # 3. Check for Dependency Injection violation in Execution Stack
         exec_stack = _EXEC_STACK.get()
         logger.debug(
-            "Singleton %s.instance() called within execution stack: %s",
-            cls.__name__,
-            exec_stack,
+            "%s.instance() called within execution stack: %s",
+            _cls_repr(cls),
+            _exec_stack_str(),
         )
         if exec_stack:
-            caller = exec_stack[-1]
+            caller, func_qualname = exec_stack[-1]
             caller_metadata = _get_metadata(caller)
-            if cls != caller and cls not in caller_metadata.depends:
+            if caller is not cls and cls not in caller_metadata.depends:
                 logger.error(
-                    "[Singleton] Strict mode: Calling %s.instance() within %s "
+                    "Calling %s.instance() within %s "
                     "is not allowed. "
                     "Please pass the instance of %s into %s's __init__() instead.",
+                    _cls_repr(cls),
+                    _exec_stack_str(),
                     cls.__name__,
-                    " -> ".join(base.__name__ + "()" for base in exec_stack),
-                    cls.__name__,
-                    caller.__name__,
+                    _cls_repr(caller),
                 )
-                raise DependencyInjectionViolationError("Dependency injection violation")
+                logger.error("Execution stack: %s", _exec_stack_str())
+                logger.error(
+                    "Caller %s depends on: [%s]",
+                    _cls_repr(caller),
+                    ", ".join(_cls_repr(s) for s in caller_metadata.depends),
+                )
+
+                # So if everyone strictly follows the Google Python style guide, this
+                # won't be a problem. But it often happens that people mixes absolute
+                # import and relative import in the same module.
+                for _dep in caller_metadata.depends:
+                    if cls.__name__ == _dep.__name__:
+                        logger.warning(
+                            "%s and %s have the same class name. This may be "
+                            "caused by mixing absolute import from different root or mixing "
+                            "absolute and relative import in the same module. Please strictly "
+                            "follow the Google Python style guide to avoid this problem. ",
+                            _cls_repr(cls),
+                            _cls_repr(_dep),
+                        )
+
+                raise DependencyInjectionViolationError(
+                    "Dependency injection violation. "
+                    f"Calling `{_cls_repr(cls)}.instance()` within "
+                    f"`{func_qualname}()` is not allowed."
+                )
 
         # Return the object if success
         with metadata.singleton_lock:
@@ -402,16 +442,16 @@ class Singleton(ABC, metaclass=SingletonMeta):
                 with metadata.singleton_lock:
                     if metadata.state == SingletonFactoryState.WORKING:
                         logger.info(
-                            "[Singleton] thread %s is still waiting for %s to be initialized.",
+                            "thread %s is still waiting for %s to be initialized.",
                             threading.current_thread().name,
-                            cls.__name__,
+                            _cls_repr(cls),
                         )
                     elif metadata.state == SingletonFactoryState.IDLE:
                         logger.warning(
-                            "[Singleton] thread %s hangs at %s.instance(). "
+                            "thread %s hangs at %s.instance(). "
                             "Waiting for another thread to initialize %s().",
                             threading.current_thread().name,
-                            cls.__name__,
+                            _cls_repr(cls),
                             cls.__name__,
                         )
             if timeout:
@@ -436,7 +476,7 @@ def reset_singleton(cls: type[Singleton], warning: bool = True) -> None:
     # check and warning if not in pytest
     if warning and "PYTEST_CURRENT_TEST" not in os.environ:
         logger.warning(
-            "[Singleton] reset_singleton called outside pytest environment. "
+            "reset_singleton called outside pytest environment. "
             "This may lead to unexpected behaviors."
         )
 
@@ -471,3 +511,17 @@ class SelfRecursiveConstructionError(SingletonError):
 
 class SelfRecursiveReferenceError(SingletonError):
     """Raised when a singleton attempts to reference itself recursively."""
+
+
+def _exec_stack_str() -> str:
+    """Return a string representation of the current execution stack for logging.
+
+    Returns the logging format string and the tuple of function names in the stack.
+    """
+    exec_stack = _EXEC_STACK.get()
+
+    return "[" + " -> ".join(f"{func_name}()" for _, func_name in exec_stack) + "]"
+
+
+def _cls_repr(cls: type[Singleton]) -> str:
+    return f"{cls.__module__}::{cls.__name__}"

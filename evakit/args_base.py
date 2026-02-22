@@ -57,7 +57,6 @@ class ArgsBase(Tap, Singleton, ABC):
         # `--ports=p1,p2,p3`. To keep backward compatibility, we override them here.
         # self._annotations is a dict of arg name to type hint Types.GenericAlias
         for arg_name, type_hint in self._annotations.items():
-
             arg_flag, default = f"--{arg_name}", getattr(self, arg_name)
             type_origin, type_args = get_origin(type_hint), get_args(type_hint)
 
@@ -77,7 +76,6 @@ class ArgsBase(Tap, Singleton, ABC):
                     self.add_argument(arg_flag, type=functools.partial(csv, str, type_origin))
             # 3. handle tuple
             elif type_origin is tuple:
-
                 # homogeneous tuple: tuple[int, ...]
                 if len(type_args) == 2 and type_args[1] is ...:
                     elem_type = type_args[0]

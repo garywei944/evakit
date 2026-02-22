@@ -28,14 +28,17 @@ repos:
       - id: check-json
       - id: mixed-line-ending
         args: [--fix=lf]
+
+  # ----------------------------------------
+  # Python (Google style)
+  # ----------------------------------------
   - repo: https://github.com/psf/black
     rev: 26.1.0
     hooks:
       - id: black
-        # language_version: python3.14
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.14
+    rev: v0.15.2
     hooks:
       - id: ruff
         args: [--fix]
@@ -48,20 +51,15 @@ repos:
           - --config-file=pyproject.toml
         additional_dependencies: []
 
-  - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.12.1
-    hooks:
-      - id: commitizen
-        stages: [commit-msg]
+  # - repo: https://github.com/pycqa/pydocstyle
+  #   rev: 6.3.0
+  #   hooks:
+  #     - id: pydocstyle
+  #       args: [--convention=google]
 
-  - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.12.0-2
-    hooks:
-      - id: shfmt
-        args:
-          - -i
-          - "2"
-          - -ci
+  # ----------------------------------------
+  # C++ (Google)
+  # ----------------------------------------
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v21.1.8
     hooks:
@@ -80,3 +78,33 @@ repos:
             textproto,
             metal,
           ]
+
+  - repo: https://github.com/cpplint/cpplint
+    rev: 2.0.2
+    hooks:
+      - id: cpplint
+
+  # ----------------------------------------
+  # Bash (strict)
+  # ----------------------------------------
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.12.0-2
+    hooks:
+      - id: shfmt
+        args: [-i, "2", -ci]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+
+  - repo: https://github.com/openstack/bashate
+    rev: 2.1.1
+    hooks:
+      - id: bashate
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.13.8
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
