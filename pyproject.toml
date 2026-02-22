@@ -36,7 +36,7 @@ dynamic = ["version"]
 dependencies = ["typed-argument-parser", "psutil", "typing-extensions"]
 
 [tool.hatch.version]
-path = "__version__.py"
+path = "evakit/__version__.py"
 
 # run build_train_launcher.sh to build the src structure
 [tool.hatch.build.targets.wheel]
