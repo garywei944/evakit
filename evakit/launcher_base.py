@@ -1,3 +1,5 @@
+"""Launcher base module for subprocess management."""
+
 import atexit
 import datetime
 import itertools
@@ -229,7 +231,7 @@ def wait_for_procs(
     for p in gone:
         p = cast(psutil.Popen, p)
         logger.info(
-            "[Launcher] Child process %d terminated with exit code %d",
+            "[Launcher] Child process %d terminated with exit code %s",
             p.pid,
             p.returncode,
         )
@@ -280,7 +282,7 @@ def exit_handler(launcher: LauncherBase, timeout: float = 180, msg: str = ""):
         logger.info("=" * 80)
         if msg:
             logger.info(msg)
-        logger.info("[ExitHandler] Release resource, timeout=%d s", timeout)
+        logger.info("[ExitHandler] Release resource, timeout=%f s", timeout)
         lg_procs = [lg_proc for lg_proc in launcher.procs if lg_proc is not None]
         kill_procs(lg_procs, timeout)
         logger.info("[ExitHandler] Resource released")

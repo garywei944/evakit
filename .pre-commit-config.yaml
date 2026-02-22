@@ -103,6 +103,9 @@ repos:
     hooks:
       - id: bashate
 
+  # ----------------------------------------
+  # Commit message
+  # ----------------------------------------
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v4.13.8
     hooks:

@@ -1,6 +1,15 @@
+"""Base class for argument parsing using Tap.
+
+Supports
+- Type hinting
+- Automatic argument parsing
+- Singleton pattern with Dependency Injection
+"""
+
 import functools
 import logging
 import os
+import pprint
 from abc import ABC
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from typing import final, get_args, get_origin
@@ -34,7 +43,6 @@ class ArgsBase(Tap, Singleton, ABC):
     - Singleton pattern with Dependency Injection
     """
 
-    @final
     def __init__(self, args: list[str] | None = None, *, frozen: bool = True) -> None:
         super().__init__(explicit_bool=False, allow_abbrev=False)
 
@@ -57,12 +65,12 @@ class ArgsBase(Tap, Singleton, ABC):
         # `--ports=p1,p2,p3`. To keep backward compatibility, we override them here.
         # self._annotations is a dict of arg name to type hint Types.GenericAlias
         for arg_name, type_hint in self._annotations.items():
-            arg_flag, default = f"--{arg_name}", getattr(self, arg_name)
+            arg_flag, default = f"--{arg_name}", getattr(self, arg_name, None)
             type_origin, type_args = get_origin(type_hint), get_args(type_hint)
 
             # 1. handler bool to add_bool_arg
             if type_hint is bool:
-                add_bool_arg(self, arg_flag, default=getattr(self, arg_name))
+                add_bool_arg(self, arg_flag, default=default)
             # 2. handle list or set
             elif type_origin in {list, set}:
                 elem_type = type_args[0]
@@ -109,14 +117,23 @@ class ArgsBase(Tap, Singleton, ABC):
     def _check_args(self) -> None:
         """Check the arguments for validity."""
 
+    def __str__(self) -> str:
+        """Return a pretty-printed string representation of the arguments.
+
+        based on tap.Tap.__str__.
+
+        Returns:
+            str: Pretty-printed string of arguments.
+        """
+        return pprint.pformat(self.as_dict())
+
 
 def str2bool(v: str) -> bool:
     if v.lower() in ("yes", "true", "t", "y", "1"):
         return True
-    elif v.lower() in ("no", "false", "f", "n", "0"):
+    if v.lower() in ("no", "false", "f", "n", "0"):
         return False
-    else:
-        raise ArgumentTypeError("Boolean value expected.")
+    raise ArgumentTypeError("Boolean value expected.")
 
 
 def add_bool_arg(parser: ArgumentParser, *args, default=False, help=None, **kwargs):
@@ -152,7 +169,7 @@ def move_arg_from_to(
 
 
 def env_to_bool(env_var: str) -> bool:
-    return os.getenv(env_var, "0").lower() not in ["0", "false"]
+    return str2bool(os.getenv(env_var, "0").lower())
 
 
 def arg_env_consistent_bool(args: Namespace | ArgsBase, arg_name: str, env_var: str):

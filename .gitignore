@@ -1,3 +1,5 @@
+/.vscode
+
 # ignore all files that's not source code
 # files should not be uploaded to GitHub, etc
 .idea
