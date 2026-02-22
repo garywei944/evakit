@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=62.6"]
+requires = ["setuptools>=64", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -20,11 +20,14 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-version = "0.1.0"
 dependencies = ["typed-argument-parser", "psutil", "typing-extensions"]
+dynamic = ["version"]
 
 [tool.setuptools]
 packages = ["evakit"]
+
+[tool.setuptools.dynamic]
+version = { attr = "evakit.__version__.__version__" }
 
 # ---------------- Black ----------------
 [tool.black]
@@ -73,7 +76,7 @@ generated-members = ["sh"]
 # ---------------- Commitizen ----------------
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.2.1"
 tag_format = "v$version"
 update_changelog_on_bump = false
-version_files = ["pyproject.toml:project.version"]
+version = "0.3.0"
+version_files = ["evakit/__version__.py:__version__"]
