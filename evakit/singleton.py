@@ -50,9 +50,7 @@ else:
     logger.setLevel(logging.DEBUG if _env2bool("LOCAL_TEST") else logging.INFO)
 
 _CONSTRUCTING: ContextVar[tuple[type["Singleton"], ...]] = ContextVar("_CONSTRUCTING", default=())
-_EXEC_STACK: ContextVar[tuple[tuple[type["Singleton"], str], ...]] = ContextVar(
-    "_EXEC_STACK", default=()
-)
+_EXEC_STACK: ContextVar[tuple[tuple[type["Singleton"], str], ...]] = ContextVar("_EXEC_STACK", default=())
 
 
 class SingletonFactoryState(enum.Enum):
@@ -104,9 +102,7 @@ class SingletonMetadata:
     depends: set[type[Singleton]] = field(default_factory=set)
 
 
-def _get_meta_dict(
-    cls: type[Singleton], init: bool = False
-) -> dict[type[Singleton], SingletonMetadata]:
+def _get_meta_dict(cls: type[Singleton], init: bool = False) -> dict[type[Singleton], SingletonMetadata]:
     """Get or create the singleton metadata dict under the module of cls."""
     module = sys.modules[cls.__module__]
     if not hasattr(module, "__singleton_meta_dict__"):
@@ -114,8 +110,7 @@ def _get_meta_dict(
             setattr(module, "__singleton_meta_dict__", dict())
         else:
             raise RuntimeError(
-                f"SingletonMetadata dict not found under {module}. "
-                "There is something wrong with module import."
+                f"SingletonMetadata dict not found under {module}. " "There is something wrong with module import."
             )
 
     return module.__singleton_meta_dict__
@@ -448,8 +443,7 @@ class Singleton(ABC, metaclass=SingletonMeta):
                         )
                     elif metadata.state == SingletonFactoryState.IDLE:
                         logger.warning(
-                            "thread %s hangs at %s.instance(). "
-                            "Waiting for another thread to initialize %s().",
+                            "thread %s hangs at %s.instance(). " "Waiting for another thread to initialize %s().",
                             threading.current_thread().name,
                             _cls_repr(cls),
                             cls.__name__,
@@ -475,10 +469,7 @@ def reset_singleton(cls: type[Singleton], warning: bool = True) -> None:
     """
     # check and warning if not in pytest
     if warning and "PYTEST_CURRENT_TEST" not in os.environ:
-        logger.warning(
-            "reset_singleton called outside pytest environment. "
-            "This may lead to unexpected behaviors."
-        )
+        logger.warning("reset_singleton called outside pytest environment. " "This may lead to unexpected behaviors.")
 
     metadata = _get_metadata(cls)
     # only for testing, don't directly use it in production code

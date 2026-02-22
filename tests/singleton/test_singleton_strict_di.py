@@ -216,9 +216,7 @@ def test_f4_1_instance_timeout_logs_warning(caplog):
     assert warnings, "Expected a warning when A.instance() times out"
 
     # Optionally: enforce loose matching of the log text
-    assert any(
-        "waiting" in msg.lower() for msg in warnings
-    ), f"Expected timeout message in warnings, got: {warnings}"
+    assert any("waiting" in msg.lower() for msg in warnings), f"Expected timeout message in warnings, got: {warnings}"
 
 
 def test_f4_2_failed_construction_is_recoverable():

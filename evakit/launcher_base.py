@@ -81,9 +81,7 @@ class LauncherBase(ABC):
                     )
                     date_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     if proc_meta.log_file:
-                        proc_meta.log_file.write(
-                            f"{date_str} runner fail; only for report log to forge\n"
-                        )
+                        proc_meta.log_file.write(f"{date_str} runner fail; only for report log to forge\n")
                     return False
                 if count == 0:
                     logger.info(
@@ -199,9 +197,7 @@ def kill_procs(proc_metas: list[ProcessMeta], timeout: float = 5):
         # For the first try, we wait for the given timeout
         _timeout = timeout if tries == 0 else retry_sigkill_every
 
-        need_to_wait = wait_for_procs(
-            need_to_wait, kill_callback, "killing it with SIGKILL", _timeout
-        )
+        need_to_wait = wait_for_procs(need_to_wait, kill_callback, "killing it with SIGKILL", _timeout)
         if not need_to_wait:
             break
     else:

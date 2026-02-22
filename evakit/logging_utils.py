@@ -6,9 +6,7 @@ __all__ = ["setup_root_logger", "log_header"]
 logger = logging.getLogger(__name__)
 
 
-def setup_root_logger(
-    process_info: bool = True, full_path: bool = True, clear_root_handlers: bool = True
-):
+def setup_root_logger(process_info: bool = True, full_path: bool = True, clear_root_handlers: bool = True):
     """Setup the root logger with a specific format.
 
     By default, the root logger format will be propagated to all child loggers, so we
