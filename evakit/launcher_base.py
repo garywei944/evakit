@@ -154,7 +154,7 @@ def kill_procs(proc_metas: list[ProcessMeta], timeout: float = 5):
         try:
             if os.getpgid(proc.pid) in child_pgids:
                 child_pgid_procs.append(proc)
-        except psutil.NoSuchProcess, ProcessLookupError:
+        except (psutil.NoSuchProcess, ProcessLookupError):
             logger.info("[Launcher] Process %d already terminated, no need to wait", proc.pid)
             continue
 

@@ -24,7 +24,7 @@ class ThreadOutcome:
 def declares_param(func, name="tid_") -> bool:
     try:
         sig = inspect.signature(func, follow_wrapped=True)
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         return False
     p = sig.parameters.get(name)
     return p is not None and p.kind in (
