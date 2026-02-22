@@ -10,15 +10,15 @@ license = "MIT"
 authors = [{ name = "Gary Wei", email = "garywei944@gmail.com" }]
 readme = "README.md"
 classifiers = [
-  #    "Development Status :: 2 - Pre-Alpha",
-  "Intended Audience :: Developers",
-  "Natural Language :: English",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.14",
+    #    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = ["typed-argument-parser", "psutil", "typing-extensions"]
 dynamic = ["version"]
@@ -48,6 +48,8 @@ known-first-party = ["evakit"]
 
 # [tool.ruff.lint.per-file-ignores]
 # "evakit/__main__.py" = ["E402"]
+[tool.pylint."messages control"]
+disable = ["bare-except", "invalid-name"]
 
 # ---------------- mypy ----------------
 [tool.mypy]
@@ -71,6 +73,13 @@ show_error_codes = true
 ignore_missing_imports = true
 
 [tool.pylint.typecheck]
+confidence = [
+    "HIGH",
+    "CONTROL_FLOW",
+    "INFERENCE",
+    "INFERENCE_FAILURE",
+    "UNDEFINED",
+]
 generated-members = ["sh"]
 
 # ---------------- Commitizen ----------------
