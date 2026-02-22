@@ -7,6 +7,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}" && pwd -P)"
 
 cd "${PROJECT_ROOT}"
 
+rm -fr dist build evakit.egg-info
 python -m build
 python -m twine check dist/*
 python -m twine upload dist/*
