@@ -66,19 +66,17 @@ repos:
     hooks:
       - id: clang-format
         types_or:
-          [
-            c++,
-            c,
-            c#,
-            cuda,
-            java,
-            javascript,
-            json,
-            objective-c,
-            proto,
-            textproto,
-            metal,
-          ]
+          - c++
+          - c
+          - c#
+          - cuda
+          - java
+          - javascript
+          - json
+          - objective-c
+          - proto
+          - textproto
+          - metal
 
   - repo: https://github.com/cpplint/cpplint
     rev: 2.0.2
@@ -103,6 +101,7 @@ repos:
     rev: 2.1.1
     hooks:
       - id: bashate
+        args: ["--max-line-length=120", "--ignore=E003"]
 
   # ----------------------------------------
   # Commit message
