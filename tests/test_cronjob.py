@@ -77,7 +77,7 @@ def test_cronjob_respects_interval():
     job.join(timeout=1)
 
     # Compute time gaps between consecutive calls
-    diffs = [t2 - t1 for t1, t2 in zip(timestamps, timestamps[1:])]
+    diffs = [t2 - t1 for t1, t2 in zip(timestamps[:-1], timestamps[1:], strict=True)]
     # Expect roughly >= 0.04s intervals (some jitter allowed)
     assert all(d >= 0.04 for d in diffs)
     assert not job.is_alive()

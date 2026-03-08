@@ -44,7 +44,7 @@ class ArgsBase(Tap, Singleton, ABC):
     """
 
     def __init__(self, args: list[str] | None = None, *, frozen: bool = True) -> None:
-        super().__init__(explicit_bool=False, allow_abbrev=False)
+        super().__init__(explicit_bool=True, add_help=False, allow_abbrev=False)
 
         self.parse_args(args=args, known_only=True)
 
@@ -202,4 +202,4 @@ def tuple_parser(type_args, value: str):
     if len(parts) != len(type_args):
         raise ArgumentTypeError(f"Expected {len(type_args)} values, got {len(parts)}")
 
-    return tuple(t(p) for t, p in zip(type_args, parts))
+    return tuple(t(p) for t, p in zip(type_args, parts, strict=True))

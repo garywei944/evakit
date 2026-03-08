@@ -53,11 +53,14 @@ line-length = 120
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = ["E", "F", "B", "I", "UP"]
 ignore = []
 
 [tool.ruff.lint.isort]
-known-first-party = ["evakit"]
+known-first-party = ["eden", "evakit"]
+
+[tool.ruff.format]
+quote-style = "double"
 
 # [tool.ruff.lint.per-file-ignores]
 # "evakit/__main__.py" = ["E402"]

@@ -35,7 +35,12 @@ from dataclasses import dataclass
 
 import pytest
 
-from evakit.singleton import Singleton, reset_singleton
+from evakit.singleton import (
+    SelfRecursiveConstructionError,
+    SelfRecursiveReferenceError,
+    Singleton,
+    reset_singleton,
+)
 
 
 # F1.1: At most 1 instance exists at any given moment for a Singleton class
@@ -113,7 +118,7 @@ def test_s1_2_no_self_recursion():
                 type(self).tries += 1
                 A()
 
-    with pytest.raises(Exception):
+    with pytest.raises(SelfRecursiveConstructionError):
         A()
 
 
@@ -123,7 +128,7 @@ def test_s1_2_no_self_reference():
             self.value = 42
             A.instance()
 
-    with pytest.raises(Exception):
+    with pytest.raises(SelfRecursiveReferenceError):
         A()
 
 

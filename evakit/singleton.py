@@ -29,12 +29,21 @@ import os
 import sys
 import threading
 from abc import ABC, ABCMeta
+from collections.abc import Callable
 from concurrent import futures as cf
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from typing import Any, Callable, Self, cast, final
+from typing import Any, Self, cast, final
 
-__all__ = ["Singleton", "SingletonMeta", "reset_singleton"]
+__all__ = [
+    "Singleton",
+    "SingletonMeta",
+    "reset_singleton",
+    "ManyConstructionError",
+    "DependencyInjectionViolationError",
+    "SelfRecursiveConstructionError",
+    "SelfRecursiveReferenceError",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +58,8 @@ if "SINGLETON_DEBUG" in os.environ:
 else:
     logger.setLevel(logging.DEBUG if _env2bool("LOCAL_TEST") else logging.INFO)
 
-_CONSTRUCTING: ContextVar[tuple[type["Singleton"], ...]] = ContextVar("_CONSTRUCTING", default=())
-_EXEC_STACK: ContextVar[tuple[tuple[type["Singleton"], str], ...]] = ContextVar("_EXEC_STACK", default=())
+_CONSTRUCTING: ContextVar[tuple[type[Singleton], ...]] = ContextVar("_CONSTRUCTING", default=())
+_EXEC_STACK: ContextVar[tuple[tuple[type[Singleton], str], ...]] = ContextVar("_EXEC_STACK", default=())
 
 
 class SingletonFactoryState(enum.Enum):
@@ -107,7 +116,7 @@ def _get_meta_dict(cls: type[Singleton], init: bool = False) -> dict[type[Single
     module = sys.modules[cls.__module__]
     if not hasattr(module, "__singleton_meta_dict__"):
         if init:
-            setattr(module, "__singleton_meta_dict__", dict())
+            setattr(module, "__singleton_meta_dict__", {})  # noqa: B010
         else:
             raise RuntimeError(
                 f"SingletonMetadata dict not found under {module}. " "There is something wrong with module import."
@@ -204,7 +213,7 @@ class SingletonMeta(ABCMeta):
                 # OtherSingleton.instance()`
                 # Do it recursively as DFS
                 stack = [instance]
-                visited: set[type["Singleton"]] = set([_cls])
+                visited: set[type[Singleton]] = set([_cls])
                 while stack:
                     curr = stack.pop()
                     for attr_name in curr.__dict__.values():

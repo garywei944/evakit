@@ -21,6 +21,7 @@ from concurrent import futures as ct
 import pytest
 
 from evakit.singleton import (
+    DependencyInjectionViolationError,
     ManyConstructionError,
     Singleton,
     reset_singleton,
@@ -42,7 +43,7 @@ def test_f3_1_violating_dependency_injection_raises_exception():
 
     a = A()
     assert a.value == 42
-    with pytest.raises(Exception):
+    with pytest.raises(DependencyInjectionViolationError):
         B()
 
 
@@ -110,7 +111,7 @@ def test_f3_3_strict_dependency_injection_in_method_calls():
     a = A()
     assert a.value == 42
     b = B()
-    with pytest.raises(Exception):
+    with pytest.raises(DependencyInjectionViolationError):
         b.do_something()
 
     # classmethod call is allowed
@@ -305,5 +306,5 @@ def test_partial_initialization_is_not_allowed():
             super().__init__()
             A(self)
 
-    with pytest.raises(Exception):
+    with pytest.raises(DependencyInjectionViolationError):
         B()

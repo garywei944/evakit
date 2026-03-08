@@ -8,9 +8,10 @@ import os
 import signal
 import threading
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
-from typing import Callable, TextIO, cast
+from typing import TextIO, cast
 
 import psutil
 

@@ -20,6 +20,7 @@ repos:
       - id: check-toml
       - id: check-ast
       - id: check-added-large-files
+        args: ["--maxkb=500"]
       - id: check-merge-conflict
       - id: check-executables-have-shebangs
       - id: check-shebang-scripts-are-executable
@@ -27,6 +28,7 @@ repos:
       - id: debug-statements
       - id: check-case-conflict
       - id: check-json
+        exclude: keybindings.*\.json
       - id: mixed-line-ending
         args: [--fix=lf]
 
@@ -34,15 +36,15 @@ repos:
   # Python (Google style)
   # ----------------------------------------
   - repo: https://github.com/psf/black
-    rev: 26.1.0
+    rev: 26.3.0
     hooks:
       - id: black
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.2
+    rev: v0.15.5
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--fix, --exit-non-zero-on-fix]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.19.1
@@ -62,7 +64,7 @@ repos:
   # C++ (Google)
   # ----------------------------------------
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v21.1.8
+    rev: v22.1.0
     hooks:
       - id: clang-format
         types_or:
@@ -96,18 +98,45 @@ repos:
     rev: v0.11.0.1
     hooks:
       - id: shellcheck
+        files: \.(sh|bash)$
 
   - repo: https://github.com/openstack/bashate
     rev: 2.1.1
     hooks:
       - id: bashate
-        args: ["--max-line-length=120", "--ignore=E003"]
+        args: ["--max-line-length=120", "--ignore=E003,E006"]
+
+  - repo: local
+    hooks:
+      - id: zsh-syntax
+        name: zsh syntax check
+        entry: zsh -n
+        language: system
+        files: \.zsh$
 
   # ----------------------------------------
   # Commit message
   # ----------------------------------------
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.13.8
+    rev: v4.13.9
     hooks:
       - id: commitizen
         stages: [commit-msg]
+
+  # ----------------------------------------
+  # Misc
+  # ----------------------------------------
+  - repo: https://github.com/bufbuild/buf
+    rev: v1.66.0
+    hooks:
+      - id: buf-lint
+
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.14.0
+    hooks:
+      - id: hadolint
+
+  # - repo: https://github.com/markdownlint/markdownlint
+  #   rev: v0.15.0
+  #   hooks:
+  #     - id: markdownlint
