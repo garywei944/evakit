@@ -1,20 +1,41 @@
+import atexit
 import logging
+import logging.handlers
+import queue
 from typing import Any
 
 __all__ = ["setup_root_logger", "log_header"]
 
 logger = logging.getLogger(__name__)
 
+_queue = queue.Queue[Any]()
+_listener: logging.handlers.QueueListener | None = None
+_atexit_registered = False
+
+
+def _shutdown_logging():
+    global _listener
+    if _listener is not None:
+        _listener.stop()
+
 
 def setup_root_logger(process_info: bool = True, full_path: bool = True, clear_root_handlers: bool = True):
-    """Setup the root logger with a specific format.
+    global _queue, _listener, _atexit_registered
 
-    By default, the root logger format will be propagated to all child loggers, so we
-    don't need to setup loggers for each module.
-    """
+    if not _atexit_registered:
+        atexit.register(_shutdown_logging)
+        _atexit_registered = True
+
+    root = logging.getLogger()
+
+    # Stop previous listener if it exists. This flush the pending log records.
+    if _listener is not None:
+        _listener.stop()
+        _listener = None
+        _queue = queue.Queue[Any]()
 
     if clear_root_handlers:
-        logging.root.handlers.clear()
+        root.handlers.clear()
 
     segs = ["%(levelname).1s%(asctime)s.%(msecs)03d"]
 
@@ -26,12 +47,25 @@ def setup_root_logger(process_info: bool = True, full_path: bool = True, clear_r
     loc = "%(pathname)s:%(lineno)d" if full_path else "%(name)s:%(lineno)d"
     segs.append(f"{loc}::%(funcName)s - %(message)s")
 
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format=" ".join(segs),
+    formatter = logging.Formatter(
+        " ".join(segs),
         datefmt="%m%d %H:%M:%S",
-        force=True,
     )
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+
+    queue_handler = logging.handlers.QueueHandler(_queue)
+    _listener = logging.handlers.QueueListener(
+        _queue,
+        stream_handler,
+        respect_handler_level=True,
+    )
+
+    root.setLevel(logging.DEBUG)
+    root.addHandler(queue_handler)
+
+    _listener.start()
 
 
 def log_header(header: str, content: Any, header_length: int = 40, log_level: int = logging.DEBUG):
